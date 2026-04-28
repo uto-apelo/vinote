@@ -558,16 +558,17 @@ async function handleImg(e) {
   document.getElementById('img-input').value = '';
 
   const dataUrl = await readAsBase64(f);
-  const isFirst = imgData.length === 0;
   imgData.push(dataUrl);
   renderImgGrid();
   document.getElementById('ai-banner').style.display = 'none';
 
   const apiKey = getApiKey();
-  if (!apiKey || !isFirst) return; // AI解析は1枚目のみ
+  if (!apiKey) return;
 
-  console.log('[Wine] scan start, apiKey length:', apiKey.length);
+  console.log('[Wine] scan start, imgData count:', imgData.length, 'apiKey length:', apiKey.length);
+  document.getElementById('ai-banner').style.display = 'none';
   document.getElementById('scan-overlay').style.display = 'flex';
+  updateScanText(imgData.length > 1 ? `${imgData.length}枚の画像で解析中…` : 'ラベルを解析中…');
   try {
     // 429が出たら最大2回リトライ（5秒・10秒待機）
     let result, lastErr;
@@ -580,7 +581,7 @@ async function handleImg(e) {
       }
       console.log(`[Wine] attempt ${i+1}`);
       try {
-        result = await scanWithClaude(dataUrl, f.type || 'image/jpeg', apiKey);
+        result = await scanWithClaude([...imgData], f.type || 'image/jpeg', apiKey);
         console.log('[Wine] scan success:', result);
         break;
       } catch(e) {
@@ -637,13 +638,33 @@ function resizeImage(dataUrl, maxPx = 1024) {
   });
 }
 
-async function scanWithClaude(dataUrl, mimeType, apiKey) {
-  const resized = await resizeImage(dataUrl, 1024);
-  const base64 = resized.split(',')[1];
+async function scanWithClaude(dataUrls, mimeType, apiKey) {
+  // 全画像をリサイズしてbase64に変換
+  const images = await Promise.all(
+    (Array.isArray(dataUrls) ? dataUrls : [dataUrls]).map(async url => {
+      const resized = await resizeImage(url, 1024);
+      return resized.split(',')[1];
+    })
+  );
 
-  const prompt = `You are a wine label reader. Analyze this wine bottle or label image and return ONLY a JSON object with these fields. Use null for anything you cannot read. For "type", use only one of: 赤,白,ロゼ,オレンジ,スパークリング,デザート. Return raw JSON only, no markdown, no explanation.
+  const prompt = `You are an expert sommelier and wine label analyst with deep knowledge of wines from all regions worldwide.
 
-{"name":"wine name in original language","producer":"producer name","vintage":"year as 4-digit string or null","region":"region/appellation","grape":"grape variety","type":"赤 or 白 or ロゼ or オレンジ or スパークリング or デザート or null"}`;
+Analyze the wine bottle or label in this image and extract information with the following priority:
+1. Read ALL text visible on the label carefully, including small print
+2. Use your wine knowledge to infer missing details (e.g. if you see "Barolo" you know it's Nebbiolo grape from Piedmont, Italy)
+3. For Japanese wines (日本ワイン), prioritize reading Japanese text
+
+Return ONLY a valid JSON object. No markdown, no explanation, no extra text.
+
+Rules:
+- "name": The wine's proper name (exclude producer name if separate). Use original language on label.
+- "producer": Winery or producer name. Use original language on label.
+- "vintage": 4-digit year only (e.g. "2021"). null if not shown.
+- "region": Most specific region you can identify (e.g. "Pauillac, Bordeaux, France" or "Napa Valley, California, USA")
+- "grape": Primary grape variety or blend (e.g. "Cabernet Sauvignon" or "Cabernet Sauvignon, Merlot blend")
+- "type": MUST be one of exactly: 赤,白,ロゼ,オレンジ,スパークリング,デザート — infer from label color, grape variety, or region if not explicit
+
+{"name":"...","producer":"...","vintage":"...","region":"...","grape":"...","type":"..."}`;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 30000);
@@ -663,7 +684,7 @@ async function scanWithClaude(dataUrl, mimeType, apiKey) {
         messages: [{
           role: 'user',
           content: [
-            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
+            ...images.map(b64 => ({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } })),
             { type: 'text', text: prompt }
           ]
         }]
