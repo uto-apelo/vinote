@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="ワインログ">
 <title>ワインジャーナル</title>
-<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital@0;1&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Syne:wght@600;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg: #fafaf9;
@@ -33,7 +33,7 @@
 html, body {
   background: var(--bg);
   color: var(--text);
-  font-family: 'Inter', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-weight: 400;
   min-height: 100dvh;
   overscroll-behavior: none;
@@ -46,14 +46,14 @@ html, body {
 .top-bar {
   background: var(--white);
   border-bottom: 1px solid var(--border);
-  padding-top: max(env(safe-area-inset-top, 0px), 24px);
+  padding-top: env(safe-area-inset-top, 0px);
   position: sticky; top: 0; z-index: 20;
 }
-.top-bar-inner { display: flex; align-items: baseline; gap: 8px; padding: 10px 20px 0; }
-.top-bar h1 { font-family: 'Libre Baskerville', serif; font-size: 21px; font-weight: 400; color: var(--text); letter-spacing: -0.01em; }
+.top-bar-inner { display: flex; align-items: flex-start; justify-content: space-between; padding: 6px 16px 0; }
+.top-bar h1 { font-family: 'Syne', sans-serif; font-size: 21px; font-weight: 400; color: var(--text); letter-spacing: -0.01em; }
 .count-badge { font-size: 12px; color: var(--text-muted); background: var(--surface); border-radius: 100px; padding: 2px 8px; }
 .tabs { display: flex; padding: 0 4px; }
-.tab-btn { flex: 1; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 400; padding: 10px 4px; cursor: pointer; margin-bottom: -1px; transition: color 0.18s, border-color 0.18s; }
+.tab-btn { flex: 1; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 400; padding: 10px 4px; cursor: pointer; margin-bottom: -1px; transition: color 0.18s, border-color 0.18s; }
 .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
 
 /* SECTIONS */
@@ -64,7 +64,7 @@ html, body {
 /* FORM */
 .form-stack { display: flex; flex-direction: column; gap: 16px; }
 .form-label { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px; }
-.form-input, .form-textarea { width: 100%; background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 400; padding: 12px 14px; outline: none; transition: border-color 0.18s, box-shadow 0.18s; -webkit-appearance: none; }
+.form-input, .form-textarea { width: 100%; background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 400; padding: 12px 14px; outline: none; transition: border-color 0.18s, box-shadow 0.18s; -webkit-appearance: none; }
 .form-input:focus, .form-textarea:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(124,63,44,0.08); }
 .form-input::placeholder, .form-textarea::placeholder { color: var(--text-muted); font-weight: 300; }
 .form-textarea { resize: none; min-height: 84px; line-height: 1.6; }
@@ -99,6 +99,12 @@ html, body {
 .upload-title { font-size: 14px; color: var(--text-secondary); }
 .upload-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 .img-upload-area img#img-preview { width: 100%; max-height: 240px; object-fit: contain; display: block; }
+.img-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; width: 100%; }
+.img-grid-item { position: relative; aspect-ratio: 3/4; border-radius: var(--radius-xs); overflow: hidden; background: var(--surface); }
+.img-grid-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.img-grid-item .remove-img { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%; background: rgba(0,0,0,0.5); border: none; color: #fff; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+.img-add-tile { aspect-ratio: 3/4; border-radius: var(--radius-xs); border: 1.5px dashed var(--border); background: var(--white); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; color: var(--text-muted); font-size: 12px; }
+.img-add-tile span { font-size: 20px; }
 
 /* SCAN OVERLAY */
 .scan-overlay { position: absolute; inset: 0; background: rgba(250,250,249,0.93); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
@@ -119,16 +125,16 @@ html, body {
 .api-key-status.set { background: var(--green-light); color: var(--green); }
 .api-key-status.unset { background: var(--accent-light); color: var(--accent); }
 .api-key-input-row { display: flex; gap: 8px; }
-.api-key-input { flex: 1; background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-xs); color: var(--text); font-family: 'Inter', sans-serif; font-size: 13px; padding: 9px 12px; outline: none; min-width: 0; }
+.api-key-input { flex: 1; background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-xs); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 9px 12px; outline: none; min-width: 0; }
 .api-key-input:focus { border-color: var(--border-focus); }
-.api-key-save-btn { background: var(--accent); color: #fff; border: none; border-radius: var(--radius-xs); padding: 9px 14px; font-family: 'Inter', sans-serif; font-size: 13px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.api-key-save-btn { background: var(--accent); color: #fff; border: none; border-radius: var(--radius-xs); padding: 9px 14px; font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
 .api-key-hint { font-size: 11px; color: var(--text-muted); margin-top: 8px; line-height: 1.6; }
 .api-key-hint a { color: var(--accent); text-decoration: none; }
-.api-key-change { font-size: 11px; color: var(--text-muted); text-decoration: underline; cursor: pointer; margin-top: 4px; display: inline-block; background: none; border: none; font-family: 'Inter', sans-serif; padding: 0; }
+.api-key-change { font-size: 11px; color: var(--text-muted); text-decoration: underline; cursor: pointer; margin-top: 4px; display: inline-block; background: none; border: none; font-family: 'DM Sans', sans-serif; padding: 0; }
 
 /* TYPE CHIPS */
 .type-chips { display: flex; flex-wrap: wrap; gap: 7px; }
-.type-chip { padding: 8px 14px; border-radius: 100px; border: 1px solid var(--border); background: var(--white); font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
+.type-chip { padding: 8px 14px; border-radius: 100px; border: 1px solid var(--border); background: var(--white); font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
 .type-chip.selected { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
 
 /* STARS */
@@ -139,14 +145,14 @@ html, body {
 .star-hint { font-size: 12px; color: var(--text-muted); margin-left: 8px; }
 
 /* BUTTONS */
-.save-btn { width: 100%; padding: 15px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: opacity 0.18s; margin-top: 4px; }
+.save-btn { width: 100%; padding: 15px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: opacity 0.18s; margin-top: 4px; }
 .save-btn:active { opacity: 0.82; }
-.clear-btn { width: 100%; padding: 13px; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text-muted); cursor: pointer; margin-top: 8px; }
+.clear-btn { width: 100%; padding: 13px; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text-muted); cursor: pointer; margin-top: 8px; }
 
 /* LIST */
 .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 .list-meta { font-size: 13px; color: var(--text-muted); }
-.export-btn { font-size: 12px; color: var(--text-muted); background: none; border: 1px solid var(--border); border-radius: 100px; padding: 5px 12px; cursor: pointer; font-family: 'Inter', sans-serif; }
+.export-btn { font-size: 12px; color: var(--text-muted); background: none; border: 1px solid var(--border); border-radius: 100px; padding: 5px 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
 
 /* SETTINGS */
 .settings-btn { background: none; border: none; cursor: pointer; padding: 4px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; margin-left: auto; flex-shrink: 0; }
@@ -162,7 +168,7 @@ html, body {
 .card-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 3px; }
 .card-name-row { display: flex; align-items: baseline; gap: 6px; }
-.card-name { font-family: 'Libre Baskerville', serif; font-size: 16px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
+.card-name { font-family: 'Syne', sans-serif; font-size: 16px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
 .card-vintage { font-size: 12px; color: var(--text-muted); flex-shrink: 0; }
 .card-meta { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card-stars { font-size: 12px; color: var(--gold); }
@@ -176,7 +182,7 @@ html, body {
 /* STATS */
 .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
 .stat-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; }
-.stat-num { font-family: 'Libre Baskerville', serif; font-size: 26px; color: var(--text); line-height: 1; margin-bottom: 4px; }
+.stat-num { font-family: 'Syne', sans-serif; font-size: 26px; color: var(--text); line-height: 1; margin-bottom: 4px; }
 .stat-lbl { font-size: 11px; color: var(--text-muted); }
 .ranking-label { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
 .rank-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
@@ -191,7 +197,7 @@ html, body {
 .modal-sheet { background: var(--white); border-radius: 20px 20px 0 0; border-top: 1px solid var(--border); width: 100%; max-width: 430px; max-height: 90dvh; overflow-y: auto; padding: 0 20px calc(32px + env(safe-area-inset-bottom, 0px)); animation: sheetUp 0.28s cubic-bezier(0.32,0.72,0,1); }
 @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 .sheet-handle { width: 32px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 20px; }
-.modal-wine-name { font-family: 'Libre Baskerville', serif; font-size: 22px; font-weight: 400; color: var(--text); line-height: 1.3; margin-bottom: 2px; }
+.modal-wine-name { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 400; color: var(--text); line-height: 1.3; margin-bottom: 2px; }
 .modal-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
 .modal-img { width: 100%; max-height: 200px; object-fit: contain; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 16px; }
 .detail-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 16px; }
@@ -199,8 +205,8 @@ html, body {
 .d-value { font-size: 13px; color: var(--text); text-align: right; line-height: 1.5; }
 .memo-block { background: var(--surface); border-radius: var(--radius-xs); padding: 12px 14px; margin-top: 14px; font-size: 14px; color: var(--text-secondary); line-height: 1.7; font-style: italic; }
 .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
-.btn-edit { flex: 1; padding: 14px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; }
-.btn-delete { padding: 14px 18px; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: 'Inter', sans-serif; font-size: 14px; color: #c0392b; cursor: pointer; }
+.btn-edit { flex: 1; padding: 14px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; }
+.btn-delete { padding: 14px 18px; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 14px; color: #c0392b; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -208,18 +214,22 @@ html, body {
 
   <div class="top-bar">
     <div class="top-bar-inner">
-      <h1>ワインジャーナル</h1>
-      <span class="count-badge" id="top-count" style="display:none"></span>
-      <button class="settings-btn" onclick="openSettings()" aria-label="設定">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      <div class="logo-wrap" style="display:flex;align-items:center;gap:12px;padding:10px 16px 0;justify-content:space-between;width:100%">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 90" height="56" style="display:block;overflow:visible">
+          <text x="2" y="72" font-family="Georgia,'Times New Roman',serif" font-size="86" fill="#1A1A1A" letter-spacing="4" font-weight="400">Vinote</text>
+          <circle cx="120" cy="77" r="4.5" fill="#5C1B2E"/>
         </svg>
-      </button>
+        <button class="settings-btn" onclick="openSettings()" aria-label="設定" style="flex-shrink:0;margin-top:0">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+      </div>
     </div>
     <div class="tabs">
-      <button class="tab-btn" onclick="switchTab('add')">新しく記録</button>
-      <button class="tab-btn" onclick="switchTab('list')">記録一覧</button>
+      <button class="tab-btn" onclick="switchTab('add')">記録</button>
+      <button class="tab-btn" onclick="switchTab('list')">一覧</button>
       <button class="tab-btn" onclick="switchTab('stats')">統計</button>
     </div>
   </div>
@@ -252,17 +262,12 @@ html, body {
         <div>
           <div class="form-label">
             ラベル写真
-            <span style="font-size:10px;color:var(--green);text-transform:none;letter-spacing:0;font-weight:400"> AIが自動入力</span>
+            <span style="font-size:10px;color:var(--green);text-transform:none;letter-spacing:0;font-weight:400"> AIが自動入力（1枚目）</span>
           </div>
-          <div class="img-upload-area" id="upload-area" onclick="triggerUpload()">
-            <div class="upload-placeholder" id="upload-placeholder">
-              <div class="upload-icon-wrap">📷</div>
-              <div>
-                <div class="upload-title">撮影 / ライブラリから選択</div>
-                <div class="upload-sub">ラベルを撮るとAIが情報を読み取ります</div>
-              </div>
+          <div class="img-upload-area" id="upload-area" style="min-height:auto">
+            <div id="img-grid-wrap" style="width:100%">
+              <!-- 動的に生成 -->
             </div>
-            <img id="img-preview" style="display:none" alt="">
             <div class="scan-overlay" id="scan-overlay" style="display:none">
               <div class="scan-spinner"></div>
               <div class="scan-text">ラベルを解析中…</div>
@@ -336,7 +341,7 @@ html, body {
           <textarea class="form-textarea" id="f-memo" placeholder="香り、味わい、余韻など…"></textarea>
         </div>
 
-        <button class="save-btn" onclick="saveWine()">この1本を記録する</button>
+        <button class="save-btn" onclick="saveWine()">記録する</button>
         <button class="clear-btn" onclick="clearForm()">クリア</button>
 
       </div>
@@ -399,7 +404,7 @@ html, body {
 let wines = [];
 let score = 0;
 let wineType = '';
-let imgData = '';
+let imgData = []; // 最大2枚
 let editId = null;
 let gpsLocation = '';
 
@@ -509,22 +514,57 @@ function switchTab(t) {
 // ── IMAGE + GEMINI SCAN ──
 function triggerUpload() {
   if (document.getElementById('scan-overlay').style.display !== 'none') return;
+  if (imgData.length >= 2) return;
   document.getElementById('img-input').click();
+}
+
+function renderImgGrid() {
+  const wrap = document.getElementById('img-grid-wrap');
+  const area = document.getElementById('upload-area');
+  if (imgData.length === 0) {
+    // 空: プレースホルダー表示
+    area.style.minHeight = '76px';
+    wrap.innerHTML = `
+      <div class="upload-placeholder" onclick="triggerUpload()" style="cursor:pointer">
+        <div class="upload-icon-wrap">📷</div>
+        <div>
+          <div class="upload-title">撮影 / ライブラリから選択</div>
+          <div class="upload-sub">ラベルを撮るとAIが情報を読み取ります</div>
+        </div>
+      </div>`;
+  } else {
+    area.style.minHeight = 'auto';
+    const tiles = imgData.map((src, i) => `
+      <div class="img-grid-item">
+        <img src="${src}" alt="">
+        <button class="remove-img" onclick="removeImg(${i});event.stopPropagation()">×</button>
+      </div>`).join('');
+    const addTile = imgData.length < 2 ? `
+      <div class="img-add-tile" onclick="triggerUpload()">
+        <span>📷</span>追加
+      </div>` : '';
+    wrap.innerHTML = `<div class="img-grid">${tiles}${addTile}</div>`;
+  }
+}
+
+function removeImg(idx) {
+  imgData.splice(idx, 1);
+  renderImgGrid();
 }
 
 async function handleImg(e) {
   const f = e.target.files[0];
   if (!f) return;
+  document.getElementById('img-input').value = '';
 
   const dataUrl = await readAsBase64(f);
-  imgData = dataUrl;
-  document.getElementById('img-preview').src = dataUrl;
-  document.getElementById('img-preview').style.display = 'block';
-  document.getElementById('upload-placeholder').style.display = 'none';
+  const isFirst = imgData.length === 0;
+  imgData.push(dataUrl);
+  renderImgGrid();
   document.getElementById('ai-banner').style.display = 'none';
 
   const apiKey = getApiKey();
-  if (!apiKey) return;
+  if (!apiKey || !isFirst) return; // AI解析は1枚目のみ
 
   console.log('[Wine] scan start, apiKey length:', apiKey.length);
   document.getElementById('scan-overlay').style.display = 'flex';
@@ -716,7 +756,7 @@ function saveWine() {
     price: document.getElementById('f-price').value,
     score,
     memo: document.getElementById('f-memo').value.trim(),
-    img: imgData
+    imgs: [...imgData]
   };
   if (editId) { wines = wines.map(x => x.id === editId ? w : x); editId = null; }
   else wines.unshift(w);
@@ -734,10 +774,8 @@ function clearForm() {
   document.getElementById('star-hint').textContent = '未評価';
   wineType = '';
   document.querySelectorAll('.type-chip').forEach(c => c.classList.remove('selected'));
-  imgData = '';
-  document.getElementById('img-preview').style.display = 'none';
-  document.getElementById('img-preview').src = '';
-  document.getElementById('upload-placeholder').style.display = 'flex';
+  imgData = [];
+  renderImgGrid();
   document.getElementById('img-input').value = '';
   document.getElementById('ai-banner').style.display = 'none';
   editId = null;
@@ -753,7 +791,7 @@ function renderList() {
   }
   el.innerHTML = wines.map(w => `
     <div class="wine-card" onclick="showDetail(${w.id})">
-      <div class="card-thumb">${w.img ? `<img src="${w.img}" alt="">` : '🍷'}</div>
+      <div class="card-thumb">${(w.imgs&&w.imgs[0])||w.img ? `<img src="${(w.imgs&&w.imgs[0])||w.img}" alt="">` : '🍷'}</div>
       <div class="card-info">
         <div class="card-name-row">
           <div class="card-name">${esc(w.name)}</div>
@@ -771,9 +809,7 @@ function renderList() {
 }
 
 function updateBadge() {
-  const b = document.getElementById('top-count');
-  if (wines.length) { b.textContent = wines.length + '本'; b.style.display = ''; }
-  else b.style.display = 'none';
+  // バッジ非表示
 }
 
 // ── DETAIL ──
@@ -789,7 +825,7 @@ function showDetail(id) {
   document.getElementById('modal-content').innerHTML = `
     <div class="modal-wine-name">${esc(w.name)}</div>
     <div class="modal-sub">${[w.type, w.vintage?w.vintage+'年':''].filter(Boolean).join(' · ')||'&nbsp;'}</div>
-    ${w.img?`<img class="modal-img" src="${w.img}" alt="">`:''}
+    ${(w.imgs&&w.imgs.length)?w.imgs.map(src=>`<img class="modal-img" src="${src}" alt="" style="margin-bottom:8px">`).join(''):(w.img?`<img class="modal-img" src="${w.img}" alt="">`:'') }
     ${rows.map(([l,v])=>`<div class="detail-row"><span class="d-label">${l}</span><span class="d-value">${esc(String(v))}</span></div>`).join('')}
     ${w.memo?`<div class="memo-block">${esc(w.memo)}</div>`:''}
     <div class="modal-btns">
@@ -826,12 +862,8 @@ function editWine(id) {
   score = w.score||0;
   document.querySelectorAll('#star-row .star-btn').forEach(b => b.classList.toggle('on', parseInt(b.dataset.v)<=score));
   document.getElementById('star-hint').textContent = score ? SCORE_LABELS[score] : '未評価';
-  if (w.img) {
-    imgData = w.img;
-    document.getElementById('img-preview').src = w.img;
-    document.getElementById('img-preview').style.display = 'block';
-    document.getElementById('upload-placeholder').style.display = 'none';
-  }
+  imgData = w.imgs ? [...w.imgs] : (w.img ? [w.img] : []);
+  renderImgGrid();
   editId = w.id;
   switchTab('add');
 }
@@ -896,6 +928,7 @@ updateBadge();
 updateApiKeyUI();
 switchTab('add');
 initAuto();
+renderImgGrid();
 </script>
 </body>
 </html>
