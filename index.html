@@ -538,7 +538,7 @@ async function handleImg(e) {
                  msg.includes('API_KEY') || msg.includes('API_KEY_INVALID') ? 'APIキーを確認してください。' :
                  (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED')) ? 'リクエスト上限に達しました。1分ほど待ってから再試行してください。' :
                  'ラベルの解析に失敗しました。情報は手入力してください。';
-    showBanner('error', hint);
+    showBanner('error', hint + (msg ? `<br><small style="opacity:0.7">${msg.slice(0,120)}</small>` : ''));
   } finally {
     document.getElementById('scan-overlay').style.display = 'none';
     updateScanText('ラベルを解析中…');
