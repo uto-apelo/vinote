@@ -376,11 +376,11 @@ html, body {
     <div class="settings-title">設定</div>
     <div class="api-key-section">
       <div class="api-key-header">
-        <span class="api-key-title">AI自動入力（Google Gemini・無料）</span>
+        <span class="api-key-title">AI自動入力（Claude API）</span>
         <span class="api-key-status" id="api-key-status">未設定</span>
       </div>
       <div id="api-key-input-row" class="api-key-input-row">
-        <input class="api-key-input" id="api-key-input" type="password" placeholder="AIzaSy...">
+        <input class="api-key-input" id="api-key-input" type="password" placeholder="sk-ant-...">
         <button class="api-key-save-btn" onclick="saveApiKey()">保存</button>
       </div>
       <div class="api-key-hint" id="api-key-hint">
@@ -415,12 +415,12 @@ function load() { try { const d = localStorage.getItem('wj3'); if (d) wines = JS
 function persist() { try { localStorage.setItem('wj3', JSON.stringify(wines)); } catch(e) {} }
 
 // ── API KEY (Gemini) ──
-function getApiKey() { try { return localStorage.getItem('wj_gemini_key') || ''; } catch(e) { return ''; } }
+function getApiKey() { try { return localStorage.getItem('wj_claude_key') || ''; } catch(e) { return ''; } }
 
 function saveApiKey() {
   const val = document.getElementById('api-key-input').value.trim();
   if (!val) return;
-  try { localStorage.setItem('wj_gemini_key', val); } catch(e) {}
+  try { localStorage.setItem('wj_claude_key', val); } catch(e) {}
   document.getElementById('api-key-input').value = '';
   updateApiKeyUI();
 }
@@ -580,13 +580,13 @@ async function handleImg(e) {
       }
       console.log(`[Wine] attempt ${i+1}`);
       try {
-        result = await scanWithGemini(dataUrl, f.type || 'image/jpeg', apiKey);
+        result = await scanWithClaude(dataUrl, f.type || 'image/jpeg', apiKey);
         console.log('[Wine] scan success:', result);
         break;
       } catch(e) {
         lastErr = e;
         console.warn(`[Wine] attempt ${i+1} failed:`, e.message);
-        if (!e.message.includes('429') && !e.message.includes('RESOURCE_EXHAUSTED')) throw e;
+        if (!e.message.includes('429')) throw e;
       }
     }
     if (!result) throw lastErr;
@@ -596,7 +596,7 @@ async function handleImg(e) {
     const msg = err.message || '';
     const hint = msg.includes('timeout') ? '解析がタイムアウトしました（30秒）。通信状況を確認して再度お試しください。' :
                  msg.includes('API_KEY') || msg.includes('API_KEY_INVALID') ? 'APIキーを確認してください。' :
-                 (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED')) ? 'リクエスト上限に達しました。1分ほど待ってから再試行してください。' :
+                 msg.includes('429') ? 'リクエスト上限に達しました。しばらく待ってから再試行してください。' :
                  'ラベルの解析に失敗しました。情報は手入力してください。';
     showBanner('error', hint + (msg ? `<br><small style="opacity:0.7">${msg.slice(0,120)}</small>` : ''));
   } finally {
@@ -637,37 +637,37 @@ function resizeImage(dataUrl, maxPx = 1024) {
   });
 }
 
-async function scanWithGemini(dataUrl, mimeType, apiKey) {
-  // 送信前にリサイズ（iPhoneの高解像度写真対策）
+async function scanWithClaude(dataUrl, mimeType, apiKey) {
   const resized = await resizeImage(dataUrl, 1024);
   const base64 = resized.split(',')[1];
-  console.log('[Wine] resized base64 length:', base64.length, 'chars (~', Math.round(base64.length*0.75/1024), 'KB)');
 
   const prompt = `You are a wine label reader. Analyze this wine bottle or label image and return ONLY a JSON object with these fields. Use null for anything you cannot read. For "type", use only one of: 赤,白,ロゼ,オレンジ,スパークリング,デザート. Return raw JSON only, no markdown, no explanation.
 
 {"name":"wine name in original language","producer":"producer name","vintage":"year as 4-digit string or null","region":"region/appellation","grape":"grape variety","type":"赤 or 白 or ロゼ or オレンジ or スパークリング or デザート or null"}`;
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 30000);
   let res;
   try {
-    res = await fetch(endpoint, {
+    res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       signal: controller.signal,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-calls': 'true'
+      },
       body: JSON.stringify({
-        contents: [{
-          parts: [
-            { inline_data: { mime_type: 'image/jpeg', data: base64 } },
-            { text: prompt }
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 512,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
+            { type: 'text', text: prompt }
           ]
-        }],
-        generationConfig: {
-          temperature: 0.1,
-          maxOutputTokens: 512
-        }
+        }]
       })
     });
   } catch(e) {
@@ -683,11 +683,7 @@ async function scanWithGemini(dataUrl, mimeType, apiKey) {
   }
 
   const data = await res.json();
-  console.log('[Wine] raw API response:', JSON.stringify(data).slice(0, 500));
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  console.log('[Wine] extracted text:', text);
-
-  // JSON部分だけ抜き出してパース（余計なテキストが混入しても対応）
+  const text = data.content?.map(c => c.text || '').join('') || '';
   const match = text.match(/\{[\s\S]*\}/);
   if (!match) throw new Error('No JSON in response: ' + text.slice(0,100));
   return JSON.parse(match[0]);
