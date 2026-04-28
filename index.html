@@ -46,7 +46,7 @@ html, body {
 .top-bar {
   background: var(--white);
   border-bottom: 1px solid var(--border);
-  padding-top: max(env(safe-area-inset-top, 0px), 44px);
+  padding-top: max(env(safe-area-inset-top, 0px), 24px);
   position: sticky; top: 0; z-index: 20;
 }
 .top-bar-inner { display: flex; align-items: baseline; gap: 8px; padding: 10px 20px 0; }
@@ -147,6 +147,14 @@ html, body {
 .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 .list-meta { font-size: 13px; color: var(--text-muted); }
 .export-btn { font-size: 12px; color: var(--text-muted); background: none; border: 1px solid var(--border); border-radius: 100px; padding: 5px 12px; cursor: pointer; font-family: 'Inter', sans-serif; }
+
+/* SETTINGS */
+.settings-btn { background: none; border: none; cursor: pointer; padding: 4px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; margin-left: auto; flex-shrink: 0; }
+.settings-btn:active { opacity: 0.6; }
+.settings-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.28); z-index: 100; display: none; align-items: flex-end; justify-content: center; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); }
+.settings-overlay.open { display: flex; }
+.settings-sheet { background: var(--white); border-radius: 20px 20px 0 0; border-top: 1px solid var(--border); width: 100%; max-width: 430px; padding: 0 20px calc(32px + env(safe-area-inset-bottom, 0px)); animation: sheetUp 0.28s cubic-bezier(0.32,0.72,0,1); }
+.settings-title { font-size: 16px; font-weight: 500; color: var(--text); margin-bottom: 16px; }
 .wine-list { display: flex; flex-direction: column; gap: 10px; }
 .wine-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; gap: 12px; cursor: pointer; transition: border-color 0.15s; }
 .wine-card:active { border-color: var(--border-focus); background: var(--surface); }
@@ -202,6 +210,12 @@ html, body {
     <div class="top-bar-inner">
       <h1>ワインジャーナル</h1>
       <span class="count-badge" id="top-count" style="display:none"></span>
+      <button class="settings-btn" onclick="openSettings()" aria-label="設定">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
     </div>
     <div class="tabs">
       <button class="tab-btn" onclick="switchTab('add')">新しく記録</button>
@@ -214,23 +228,6 @@ html, body {
   <div id="tab-add" class="section">
     <div class="scroll-area">
       <div class="form-stack">
-
-        <!-- Gemini API Key -->
-        <div class="api-key-section">
-          <div class="api-key-header">
-            <span class="api-key-title">AI自動入力（Google Gemini・無料）</span>
-            <span class="api-key-status" id="api-key-status">未設定</span>
-          </div>
-          <div id="api-key-input-row" class="api-key-input-row">
-            <input class="api-key-input" id="api-key-input" type="password" placeholder="AIzaSy...">
-            <button class="api-key-save-btn" onclick="saveApiKey()">保存</button>
-          </div>
-          <div class="api-key-hint" id="api-key-hint">
-            Google AI StudioでAPIキーを無料取得できます。<br>
-            <a href="https://aistudio.google.com/app/apikey" target="_blank">APIキーを取得 →</a>
-          </div>
-          <button class="api-key-change" id="api-key-change" style="display:none" onclick="showApiKeyInput()">キーを変更する</button>
-        </div>
 
         <!-- Auto: date + GPS -->
         <div class="auto-row">
@@ -365,6 +362,29 @@ html, body {
     </div>
   </div>
 
+</div>
+
+<!-- SETTINGS SHEET -->
+<div class="settings-overlay" id="settings-overlay" onclick="handleSettingsClick(event)">
+  <div class="settings-sheet">
+    <div class="sheet-handle"></div>
+    <div class="settings-title">設定</div>
+    <div class="api-key-section">
+      <div class="api-key-header">
+        <span class="api-key-title">AI自動入力（Google Gemini・無料）</span>
+        <span class="api-key-status" id="api-key-status">未設定</span>
+      </div>
+      <div id="api-key-input-row" class="api-key-input-row">
+        <input class="api-key-input" id="api-key-input" type="password" placeholder="AIzaSy...">
+        <button class="api-key-save-btn" onclick="saveApiKey()">保存</button>
+      </div>
+      <div class="api-key-hint" id="api-key-hint">
+        Google AI StudioでAPIキーを無料取得できます。<br>
+        <a href="https://aistudio.google.com/app/apikey" target="_blank">APIキーを取得 →</a>
+      </div>
+      <button class="api-key-change" id="api-key-change" style="display:none" onclick="showApiKeyInput()">キーを変更する</button>
+    </div>
+  </div>
 </div>
 
 <!-- DETAIL SHEET -->
@@ -606,8 +626,7 @@ async function scanWithGemini(dataUrl, mimeType, apiKey) {
         }],
         generationConfig: {
           temperature: 0.1,
-          maxOutputTokens: 512,
-          responseMimeType: 'application/json'
+          maxOutputTokens: 512
         }
       })
     });
@@ -866,6 +885,10 @@ function exportCSV() {
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ── SETTINGS ──
+function openSettings() { document.getElementById('settings-overlay').classList.add('open'); }
+function handleSettingsClick(e) { if (e.target === document.getElementById('settings-overlay')) document.getElementById('settings-overlay').classList.remove('open'); }
 
 // ── INIT ──
 load();
