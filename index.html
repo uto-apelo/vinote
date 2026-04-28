@@ -587,7 +587,7 @@ async function scanWithGemini(dataUrl, mimeType, apiKey) {
 
 {"name":"wine name in original language","producer":"producer name","vintage":"year as 4-digit string or null","region":"region/appellation","grape":"grape variety","type":"赤 or 白 or ロゼ or オレンジ or スパークリング or デザート or null"}`;
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 30000);
