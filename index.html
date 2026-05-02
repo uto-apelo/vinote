@@ -208,6 +208,7 @@ html, body {
 .btn-edit { flex: 1; padding: 14px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; }
 .btn-delete { padding: 14px 18px; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 14px; color: #c0392b; cursor: pointer; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="app">
@@ -401,6 +402,57 @@ html, body {
 </div>
 
 <script>
+// ── SUPABASE ──
+const SUPABASE_URL = 'https://ubcularawbhalaypImnt.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViY3VsYXJhd2JoYWxheXBsbW50Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3MTQxMzEsImV4cCI6MjA5MzI5MDEzMX0.AOtmnL3MZtMdp1BE1RnKUQ1h_Ftaz7dJpp0iO4q_r2s';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function sbLoad() {
+  try {
+    const { data, error } = await sb.from('wines').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    wines = data.map(r => ({ ...r, imgs: r.imgs || [] }));
+    updateBadge();
+  } catch(e) {
+    console.error('Supabase load error:', e.message);
+    // フォールバック: localStorageから読み込む
+    load();
+  }
+}
+
+async function sbSave(w) {
+  try {
+    const row = {
+      id: w.id,
+      name: w.name,
+      producer: w.producer || null,
+      vintage: w.vintage || null,
+      region: w.region || null,
+      grape: w.grape || null,
+      type: w.type || null,
+      date: w.date || null,
+      location: w.location || null,
+      price: w.price || null,
+      score: w.score || null,
+      memo: w.memo || null,
+      imgs: w.imgs || []
+    };
+    const { error } = await sb.from('wines').upsert(row);
+    if (error) throw error;
+  } catch(e) {
+    console.error('Supabase save error:', e.message);
+  }
+}
+
+async function sbDelete(id) {
+  try {
+    const { error } = await sb.from('wines').delete().eq('id', id);
+    if (error) throw error;
+  } catch(e) {
+    console.error('Supabase delete error:', e.message);
+  }
+}
+
 let wines = [];
 let score = 0;
 let wineType = '';
@@ -777,6 +829,7 @@ function saveWine() {
   if (editId) { wines = wines.map(x => x.id === editId ? w : x); editId = null; }
   else wines.unshift(w);
   persist();
+  sbSave(w);
   updateBadge();
   clearForm();
   switchTab('list');
@@ -858,7 +911,7 @@ function closeModal() { document.getElementById('modal-overlay').classList.remov
 function deleteWine(id) {
   if (!confirm('この記録を削除しますか？')) return;
   wines = wines.filter(x => x.id !== id);
-  persist(); updateBadge(); closeModal(); renderList();
+  persist(); sbDelete(id); updateBadge(); closeModal(); renderList();
 }
 
 function editWine(id) {
@@ -939,7 +992,8 @@ function openSettings() { document.getElementById('settings-overlay').classList.
 function handleSettingsClick(e) { if (e.target === document.getElementById('settings-overlay')) document.getElementById('settings-overlay').classList.remove('open'); }
 
 // ── INIT ──
-load();
+load(); // localStorageからまず読み込み
+sbLoad().then(() => { renderList(); }); // Supabaseで上書き
 updateBadge();
 updateApiKeyUI();
 switchTab('add');
