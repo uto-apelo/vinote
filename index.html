@@ -699,12 +699,8 @@ async function scanWithClaude(dataUrls, mimeType, apiKey) {
     })
   );
 
-  // Step1: ラベルからワイン名を読み取る
+  // Step1: ラベルからワイン名・生産者・年を読み取る
   updateScanText('ラベルを読み取り中…');
-  const step1Prompt = `Look at this wine label image carefully and extract the wine name and producer name exactly as written.
-Return ONLY a JSON object: {"name":"wine name","producer":"producer name","vintage":"4-digit year or null"}
-No markdown, no explanation.`;
-
   const step1Res = await fetch('https://vinote-proxy.yuto-119.workers.dev/', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
@@ -715,7 +711,7 @@ No markdown, no explanation.`;
         role: 'user',
         content: [
           ...images.map(b64 => ({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } })),
-          { type: 'text', text: step1Prompt }
+          { type: 'text', text: 'Look at this wine label and extract the wine name, producer, and vintage year. Return ONLY JSON: {"name":"...","producer":"...","vintage":"4-digit year or null"}. No markdown.' }
         ]
       }]
     })
@@ -723,27 +719,15 @@ No markdown, no explanation.`;
 
   if (!step1Res.ok) throw new Error(`HTTP ${step1Res.status}`);
   const step1Data = await step1Res.json();
-  const step1Text = step1Data.text || step1Data.content?.map(c=>c.text||'').join('') || '';
-  const step1Match = step1Text.match(/\{[\s\S]*\}/);
-  if (!step1Match) throw new Error('Step1 parse error: ' + step1Text.slice(0,100));
+  const step1Text = step1Data.text || '';
+  const step1Match = step1Text.match(/\{[\s\S]*?\}/);
+  if (!step1Match) throw new Error('ラベルからワイン名を読み取れませんでした');
   const step1 = JSON.parse(step1Match[0]);
-
   if (!step1.name) throw new Error('ワイン名を読み取れませんでした');
 
-  // Step2: Web検索で詳細情報を補完
+  // Step2: ワイン名でWeb検索して詳細情報を補完
   updateScanText('Web検索で情報を補完中…');
   const searchQuery = [step1.producer, step1.name, step1.vintage].filter(Boolean).join(' ');
-  const step2Prompt = `Search the web for "${searchQuery}" wine and return detailed information as JSON.
-
-Return ONLY this JSON object with no markdown or explanation:
-{
-  "name": "wine proper name in original language",
-  "producer": "producer/winery name",
-  "vintage": "4-digit year or null",
-  "region": "specific region (e.g. Pauillac, Bordeaux, France)",
-  "grape": "grape variety or blend",
-  "type": "must be one of: 赤,白,ロゼ,オレンジ,スパークリング,デザート"
-}`;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 30000);
@@ -756,51 +740,10 @@ Return ONLY this JSON object with no markdown or explanation:
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 1024,
-        messages: [{ role: 'user', content: step2Prompt }]
-      })
-    });
-  } catch(e) {
-    if (e.name === 'AbortError') throw new Error('timeout');
-    throw e;
-  } finally {
-    clearTimeout(timer);
-  }
-
-  if (!step2Res.ok) {
-    const err = await step2Res.json().catch(() => ({}));
-    throw new Error(err.error?.message || `HTTP ${step2Res.status}`);
-  }
-
-  const step2Data = await step2Res.json();
-  const step2Text = step2Data.text || '';
-  const step2Match = step2Text.match(/\{[\s\S]*\}/);
-  if (!step2Match) {
-    // Web検索結果が得られなかった場合はStep1の結果だけ返す
-    return { name: step1.name, producer: step1.producer, vintage: step1.vintage, region: null, grape: null, type: null };
-  }
-  return JSON.parse(step2Match[0]);
-
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 30000);
-  let res;
-  try {
-    res = await fetch('https://vinote-proxy.yuto-119.workers.dev/', {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 512,
         messages: [{
           role: 'user',
-          content: [
-            ...images.map(b64 => ({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } })),
-            { type: 'text', text: prompt }
-          ]
+          content: `Search the web for "${searchQuery}" wine and return detailed info as JSON only. No markdown.
+{"name":"wine name","producer":"producer","vintage":"year or null","region":"specific region, country","grape":"grape variety","type":"must be one of: 赤,白,ロゼ,オレンジ,スパークリング,デザート"}`
         }]
       })
     });
@@ -811,17 +754,20 @@ Return ONLY this JSON object with no markdown or explanation:
     clearTimeout(timer);
   }
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || `HTTP ${res.status}`);
+  if (!step2Res.ok) {
+    // Web検索失敗時はStep1の結果だけ返す
+    return { name: step1.name, producer: step1.producer, vintage: step1.vintage, region: null, grape: null, type: null };
   }
 
-  const data = await res.json();
-  const text = data.content?.map(c => c.text || '').join('') || '';
-  const match = text.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error('No JSON in response: ' + text.slice(0,100));
-  return JSON.parse(match[0]);
+  const step2Data = await step2Res.json();
+  const step2Text = step2Data.text || '';
+  const step2Match = step2Text.match(/\{[\s\S]*?\}/);
+  if (!step2Match) {
+    return { name: step1.name, producer: step1.producer, vintage: step1.vintage, region: null, grape: null, type: null };
+  }
+  return JSON.parse(step2Match[0]);
 }
+
 
 function applyAIResult(result) {
   const fieldMap = { name:'f-name', producer:'f-producer', vintage:'f-vintage', region:'f-region', grape:'f-grape' };
